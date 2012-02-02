@@ -1,0 +1,5 @@
+= Asynet --- text protocol stress testing tool
+
+== License
+
+Asynet is released under the MIT license.
