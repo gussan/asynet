@@ -24,14 +24,18 @@ module Asynet
         puts "connecting: #{@host}:#{@port}, command: #{@command}"
         EM.synchrony do
           EM::Synchrony::FiberIterator.new([self]*@options[:concurrency], @options[:concurrency]).map do |cli, iter|
+            socket = EventMachine::Synchrony::TCPSocket.open(@host, @port) if @options[:keepalive]
             while @options[:num] > @num
               begin
-                socket = EventMachine::Synchrony::TCPSocket.open(@host, @port)
+                socket = EventMachine::Synchrony::TCPSocket.open(@host, @port) unless @options[:keepalive]
                 fibered_log @command
                 socket.write(instance_eval("%@#{@command.gsub('@', '\@')}@") + "\r\n")
                 fibered_log socket.read
               rescue => err
                 fibered_log err.inspect
+                fibered_log err.backtrace
+                fibered_log err.to_s
+                fibered_log err.message
               ensure
                 @num += 1 if @options[:num] > 0
                 socket.close if socket
@@ -53,6 +57,7 @@ module Asynet
         opt.on("-c CONCURRENCY") {|v| options[:concurrency] = v.to_i }
         opt.on("-n TIMES") {|v| options[:num] = v.to_i }
         opt.on("-w WAIT") {|v| options[:wait] = v.to_f }
+        opt.on("-k") { options[:keepalive] = true }
         opt.parse!(args)
 
         self.new(host, port, command, options)
