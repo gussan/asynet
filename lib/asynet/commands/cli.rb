@@ -38,7 +38,7 @@ module Asynet
                 fibered_log err.message
               ensure
                 @num += 1 if @options[:num] > 0
-                socket.close if socket
+                socket.close if !@options[:keepalive] and socket
                 EM::Synchrony.sleep(@options[:wait])
               end
             end
